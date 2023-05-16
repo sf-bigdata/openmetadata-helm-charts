@@ -11,13 +11,13 @@ global:
   clusterName: openmetadata
   maskPasswordsApi: false
   openmetadata:
-    host: openmetadata
+    host: openmetadata.openmetadata.svc.cluster.local
     # URI to use with OpenMetadata Alerts Integrations
-    uri: "http://openmetadata:8585"
+    uri: "http://openmetadata.openmetadata.svc.cluster.local:8585"
     port: 8585
     adminPort: 8586
   elasticsearch:
-    host: elasticsearch
+    host: elasticsearch.openmetadata.svc.cluster.local
     port: 9200
     scheme: http
     connectionTimeoutSecs: 5
@@ -28,33 +28,33 @@ global:
       enabled: false
       path: ""
       password:
-        secretRef: "elasticsearch-truststore-secrets"
-        secretKey: "openmetadata-elasticsearch-truststore-password"
+        secretRef: "elasticsearch-secrets"
+        secretKey: "openmetadata-elasticsearch-password"
     auth:
       enabled: false
-      username: "elasticsearch"
+      username: "admin"
       password:
         secretRef: elasticsearch-secrets
         secretKey: openmetadata-elasticsearch-password
   database:
-    host: mysql
-    port: 3306
-    driverClass: com.mysql.cj.jdbc.Driver
-    dbScheme: mysql
+    host: pg-odd-rw.database.svc.cluster.local
+    port: 5432
+    driverClass: org.postgresql.Driver
+    dbScheme: postgresql
     dbUseSSL: false
     databaseName: openmetadata_db
     auth:
       username: openmetadata_user
       password:
-        secretRef: mysql-secrets
-        secretKey: openmetadata-mysql-password
+        secretRef: openmetadata-postgresql-secrets
+        secretKey: openmetadata-postgresql-password
   pipelineServiceClientConfig:
     enabled: true
     className: "org.openmetadata.service.clients.pipeline.airflow.AirflowRESTClient"
     # endpoint url for airflow
-    apiEndpoint: http://openmetadata-dependencies-web.default.svc.cluster.local:8080
+    apiEndpoint: http://openmetadata-ingestion-web.openmetadata.svc.cluster.local:8080
     # this will be the api endpoint url of OpenMetadata Server
-    metadataApiEndpoint: http://openmetadata.default.svc.cluster.local:8585/api
+    metadataApiEndpoint: http://openmetadata.openmetadata.svc.cluster.local:8585/api
     # possible values are "no-ssl", "ignore", "validate"
     verifySsl: "no-ssl"
     hostIp: ""
@@ -79,7 +79,7 @@ global:
   authentication:
     provider: "basic"
     publicKeys:
-    - "http://openmetadata:8585/api/v1/system/config/jwks"
+    - "http://openmetadata.openmetadata.svc.cluster.local:8585/api/v1/system/config/jwks"
     authority: "https://accounts.google.com"
     clientId: ""
     callbackUrl: ""
@@ -233,9 +233,9 @@ networkPolicy:
   #   callbackUrl: "<callback_url>"
 
 image:
-  repository: docker.getcollate.io/openmetadata/server
+  repository: sf-docker-staging.common.repositories.cloud.sap/dev/openmetadata/server
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
   pullPolicy: "Always"
 
 sidecars: []
@@ -252,7 +252,8 @@ sidecars: []
 #     mountPath: /usr/share/extras
 #     readOnly: true
 
-imagePullSecrets: []
+imagePullSecrets:
+  - name: regcred
 nameOverride: ""
 fullnameOverride: "openmetadata"
 
@@ -281,12 +282,12 @@ service:
   annotations: {}
 
 ingress:
-  enabled: false
+  enabled: true
   className: ""
   annotations: {}
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: open-metadata.local
+    - host: openmetadata-server.ingress.gcp-us-odd.plt-core.shoot.canary.k8s-hana.ondemand.com
       paths:
         - path: /
           pathType: ImplementationSpecific

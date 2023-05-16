@@ -5,7 +5,7 @@
 # MySQL configurations for helm dependency
 # you can find more details about this here https://artifacthub.io/packages/helm/bitnami/mysql
 mysql:
-  enabled: true
+  enabled: false
   fullnameOverride: "mysql"
   image:
     pullPolicy: "Always"
@@ -53,9 +53,10 @@ airflow:
   enabled: true
   airflow:
     image:
-      repository: docker.getcollate.io/openmetadata/ingestion
-      tag: 1.0.1
-      pullPolicy: "IfNotPresent"
+      repository: sf-docker-staging.common.repositories.cloud.sap/dev/openmetadata/ingestion #openmetadata/ingestion
+      tag: "latest" #0.13.1
+      pullSecret: "regcred"
+      pullPolicy: "Always"
     executor: "KubernetesExecutor"
     config:
       # This is required for OpenMetadata UI to fetch status of DAGs
@@ -105,13 +106,13 @@ airflow:
   redis:
     enabled: false
   externalDatabase:
-    type: mysql
-    host: mysql
-    port: 3306
+    type: postgres
+    host: pg-odd-rw.database.svc.cluster.local
+    port: 5432
     database: airflow_db
     user: airflow_user
-    passwordSecret: airflow-mysql-secrets
-    passwordSecretKey: airflow-mysql-password
+    passwordSecret: airflow-postgresql-secrets
+    passwordSecretKey: airflow-postgresql-password
   serviceAccount:
     create: true
     name: "airflow"
@@ -122,13 +123,13 @@ airflow:
     persistence:
       enabled: true
       # NOTE: "" means cluster-default
-      storageClass: ""
+      storageClass: "nfs"
       size: 1Gi
       accessMode: ReadWriteMany
   logs:
     persistence:
       enabled: true
       # empty string means cluster-default
-      storageClass: ""
+      storageClass: "nfs"
       accessMode: ReadWriteMany
       size: 1Gi
